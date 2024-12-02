@@ -1,92 +1,54 @@
 import Foundation
 
-class FileParser {
-    var filePath: String
-
-    init(filePath: String) {
-        self.filePath = filePath
-    }
-
-    func parseFile() -> [[Int]]? {
-        do {
-            let fileURL = URL(fileURLWithPath: filePath)
-            let fileContents = try String(contentsOf: fileURL, encoding: .utf8)
-
-            var accumulator: [[Int]] = []
-
-            let lines = fileContents.split(separator: "\n")
-            for line in lines {
-                let numbers = line.split(separator: " ")
-                    .compactMap { Int($0) }
-
-                if !numbers.isEmpty {
-                    accumulator.append(numbers)
-                }
-            }
-            return accumulator
-        } catch {
-            print("Error reading file: \(error)")
-            return nil
+// Parse the input data from the file
+func parseInput(filePath: String) -> [[Int]] {
+    do {
+        let fileURL = URL(fileURLWithPath: filePath)
+        let fileContents = try String(contentsOf: fileURL, encoding: .utf8)
+        
+        return fileContents.split(separator: "\n").compactMap { line in
+            line.split(separator: " ").compactMap { Int($0) }
         }
+    } catch {
+        fatalError("Failed to read file: \(error)")
     }
 }
 
-class BusinessLogic {
-
-    func checkLevel(list1: [Int]) -> String {
-        var isIncreasing = true
-        var isDecreasing = true
-
-        for i in 0..<list1.count - 1 {
-            let num1 = list1[i]
-            let num2 = list1[i + 1]
-
-            let difference = abs(num1 - num2)
-            
-            if difference < 1 || difference > 3 {
-                return "Unsafe"
-            }
-
-            if difference > 0 {
-                isDecreasing = false
-            } else if difference < 0 {
-                isIncreasing = false
-            }
+func isAllIncreasing(levels: [Int]) -> Bool {
+    for i in 0..<levels.count - 1 {
+        let diff = levels[i + 1] - levels[i]
+        if diff < 1 || diff > 3 {
+            return false
         }
+    }
+    return true
+}
 
-        if !isIncreasing && !isDecreasing {
-            return "Unsafe"
+func isAllDecreasing(levels: [Int]) -> Bool {
+    for i in 0..<levels.count - 1 {
+        let diff = levels[i] - levels[i + 1]
+        if diff < 1 || diff > 3 {
+            return false
         }
+    }
+    return true
+}
 
-        return "Safe"
+func countSafeReports(reports: [[Int]]) -> Int {
+    return reports.reduce(0) { count, report in
+        if isAllIncreasing(levels: report) || isAllDecreasing(levels: report) {
+            return count + 1
+        }
+        return count
     }
 }
 
 func main() {
-    let filePath: String = "input.txt"
-
-    let fileParser = FileParser(filePath: filePath)
-
-    guard let arrays = fileParser.parseFile() else {
-        print("Failed to parse file")
-        return
-    }
-
-    let businessLogic = BusinessLogic()
-    var safeReports = 0
-    var unsafeReports = 0
-
-    for report in arrays {
-        let result = businessLogic.checkLevel(list1: report)
-        if result == "Safe" {
-            safeReports += 1
-        } else {
-            unsafeReports += 1
-        }
-    }
-
-    print("Safe reports: \(safeReports)")
-    print("Unsafe reports: \(unsafeReports)")
+    let filePath = "input.txt"
+    let reports = parseInput(filePath: filePath)
+    let safeCount = countSafeReports(reports: reports)
+    
+    print("Safe count: \(safeCount)")
 }
 
 main()
