@@ -1,11 +1,9 @@
 import Foundation
 
-// Parse the input data from the file
 func parseInput(filePath: String) -> [[Int]] {
     do {
         let fileURL = URL(fileURLWithPath: filePath)
         let fileContents = try String(contentsOf: fileURL, encoding: .utf8)
-        
         return fileContents.split(separator: "\n").compactMap { line in
             line.split(separator: " ").compactMap { Int($0) }
         }
@@ -34,9 +32,25 @@ func isAllDecreasing(levels: [Int]) -> Bool {
     return true
 }
 
-func countSafeReports(reports: [[Int]]) -> Int {
+func isSafe(levels: [Int], dampen: Bool) -> Bool {
+    if isAllIncreasing(levels: levels) || isAllDecreasing(levels: levels) {
+        return true
+    }
+    if dampen {
+        for i in levels.indices {
+            var modifiedLevels = levels
+            modifiedLevels.remove(at: i)
+            if isAllIncreasing(levels: modifiedLevels) || isAllDecreasing(levels: modifiedLevels) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+func countSafeReports(reports: [[Int]], dampen: Bool) -> Int {
     return reports.reduce(0) { count, report in
-        if isAllIncreasing(levels: report) || isAllDecreasing(levels: report) {
+        if isSafe(levels: report, dampen: dampen) {
             return count + 1
         }
         return count
@@ -46,9 +60,10 @@ func countSafeReports(reports: [[Int]]) -> Int {
 func main() {
     let filePath = "input.txt"
     let reports = parseInput(filePath: filePath)
-    let safeCount = countSafeReports(reports: reports)
-    
-    print("Safe count: \(safeCount)")
+    let safeCountPart1 = countSafeReports(reports: reports, dampen: false)
+    print("Part 1: \(safeCountPart1)")
+    let safeCountPart2 = countSafeReports(reports: reports, dampen: true)
+    print("Part 2: \(safeCountPart2)")
 }
 
 main()
